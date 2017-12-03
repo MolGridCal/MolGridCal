@@ -1,0 +1,5 @@
+2017-12-03 01:11:40,664 [INFO ][org.jppf.utils.FileUtils.initJPPFTempDir(547)]: JPPF temp folder C:\Users\Administrator\AppData\Local\Temp\.jppf
+2017-12-03 01:11:40,749 [INFO ][org.jppf.utils.VersionUtils.logVersionInformation(80)]: --------------------------------------------------------------------------------
+2017-12-03 01:11:40,749 [INFO ][org.jppf.utils.VersionUtils.logVersionInformation(81)]: JPPF Version: 5.2.8, Build number: 1910, Build date: 2017-08-10 06:14 CEST
+2017-12-03 01:11:40,750 [INFO ][org.jppf.utils.VersionUtils.logVersionInformation(82)]: starting client with PID=5392, UUID=44069A85-A765-9269-179E-F939459C5E82
+2017-12-03 01:11:40,750 [INFO ][org.jppf.utils.VersionUtils.logVersionInformation(83)]: --------------------------------------------------------------------------------

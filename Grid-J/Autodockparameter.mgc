@@ -1,0 +1,27 @@
+Ipaddress           202.201.5.95
+IpPort              2121
+User                gridfvs
+Password            gridfvs709
+Downloaddir         /VS2/ligands
+UploadDir           /VS2/result
+
+# The line show program run as below
+Token               ZINC
+Program             Autodock4
+Command             autodock4
+
+
+
+##Vina
+Ipaddress           202.201.5.95
+IpPort              2121
+User                gridfvs
+Password            gridfvs709
+Downloaddir         /VS1/ligands
+UploadDir           /VS1/result
+
+# The line show program run as below
+Token               ZINC
+Program             Autodock_Vina
+Command             vina
+
