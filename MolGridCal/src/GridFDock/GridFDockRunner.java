@@ -65,8 +65,8 @@ public class GridFDockRunner {
 					+ "# If you used MolGridCal in your work, please cite:               #" + "\n"
 					+ "#                                                                 #" + "\n"
 					+ "# Qifeng Bai, PLoS One. 2014 Sep 17;9(9):e107837.                 #" + "\n"
-					+ "# Download site: https://github.com/MolGridCal/VSGridDrug         #" + "\n"
-					+ "# E-mail (molgridcal@yeah.net)                                    #" + "\n"
+					+ "# Download site: https://github.com/MolGridCal/MolGridCal         #" + "\n"
+					+ "# E-mail (molaical@yeah.net)                                    #" + "\n"
 					+ "# Blog website (http://molgridcal.blog.163.com).                  #" + "\n"
 					+ "###################################################################");
 			// Create the client.
