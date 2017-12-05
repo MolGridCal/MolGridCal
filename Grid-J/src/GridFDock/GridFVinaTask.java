@@ -164,7 +164,8 @@ public class GridFVinaTask extends AbstractTask<String> {
 				try {
 					Thread.sleep(2000);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+System.exit(0);				
+//	e.printStackTrace();
 				}
 			}
 

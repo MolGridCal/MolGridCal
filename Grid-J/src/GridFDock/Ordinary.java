@@ -54,7 +54,7 @@ public class Ordinary {
 				process.waitFor();
 				process.destroy();
 			}catch(Exception e){
-				e.printStackTrace();
+				System.exit(0);
 			}finally {
 				if (in!= null) {
 					try {
