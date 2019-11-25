@@ -2,7 +2,8 @@
  * MolGridCal
  * Copyright MolGridCal Team
  * http://molgridcal.codeplex.com
- *
+ * Some codes use the JPPF API.
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,9 +28,9 @@ import org.jppf.client.*;
 import org.jppf.node.protocol.DataProvider;
 import org.jppf.node.protocol.MemoryMapDataProvider;
 import org.jppf.node.protocol.Task;
+import org.jppf.utils.Operator;
 
 public class GridFDockRunner {
-
 	private static JPPFClient jppfClient = null;
 	BufferedReader rd = null;
 	String fltmp;
@@ -47,6 +48,7 @@ public class GridFDockRunner {
 	String downdir;
 	String uploaddir;
 	String command;
+	String commandDir;
 	String program;
 	String sign;
 	String[] Arraytmp;
@@ -55,6 +57,8 @@ public class GridFDockRunner {
 	public static Ordinary cn = new Ordinary();
 	public static DataDistribute dt = new DataDistribute();
 	DecimalFormat df = new DecimalFormat("0.%");
+
+	String inputParameter = "Vinaparameter.mgc";
 
 	public static void main(String[] args) {
 		SimpleDateFormat sdf = null;
@@ -66,7 +70,7 @@ public class GridFDockRunner {
 					+ "#                                                                 #" + "\n"
 					+ "# Qifeng Bai, PLoS One. 2014 Sep 17;9(9):e107837.                 #" + "\n"
 					+ "# Download site: https://github.com/MolGridCal/MolGridCal         #" + "\n"
-					+ "# E-mail (molaical@yeah.net)                                    #" + "\n"
+					+ "# E-mail (molaical@yeah.net)                                      #" + "\n"
 					+ "# Blog website (http://molgridcal.blog.163.com).                  #" + "\n"
 					+ "###################################################################");
 			// Create the client.
@@ -77,7 +81,7 @@ public class GridFDockRunner {
 			sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			executeTime = sdf.format(new java.util.Date());
 			System.out.println("Executed time is on: " + executeTime);
-			runner.executeBlockingJob(jppfClient);
+			runner.executeBlockingTask(jppfClient);
 			// JPPFJob job = runner.buildJob();
 			// execute a blocking job
 			// runner.executeBlockingJob(job);
@@ -98,9 +102,9 @@ public class GridFDockRunner {
 
 		// Read the parameters from the file.
 		try {
-			fl = new File("parameter.mgc");
+			fl = new File(inputParameter);
 		} catch (Exception e) {
-			System.out.println("The parameter of \"parameter.mgc\" can not be found, please create it!");
+			System.out.println("The parameter of " + inputParameter + " can not be found, please create it!");
 		}
 
 		try {
@@ -112,6 +116,11 @@ public class GridFDockRunner {
 				} else {
 
 					temArray = tempStr.split("\\s+");
+					// Replace "\" to  "/".
+					if (temArray[1].contains("\\")) {
+						temArray[1].replaceAll("\\\\", "/");
+					}
+
 					if (temArray[0].equalsIgnoreCase("Ipaddress")) {
 						ip = temArray[1];
 					} else if (temArray[0].equalsIgnoreCase("IpPort")) {
@@ -132,11 +141,19 @@ public class GridFDockRunner {
 						sign = temArray[1];
 					} else if (temArray[0].equalsIgnoreCase("MaxNodes")) {
 						maxNodes = Integer.parseInt(temArray[1]);
+					} else if (temArray[0].equalsIgnoreCase("commandDir")) {
+						if (tempStr.contains("Program Files")) {
+							commandDir = temArray[1] + " " + temArray[2];
+						} else if (tempStr.contains("Program Files (x86)")) {
+							commandDir = temArray[1] + " " + temArray[2] + " " + temArray[3];
+						} else {
+							commandDir = temArray[1];
+						}
 					} else if (temArray[0].startsWith("#")) {
 
 					} else {
 						System.out.println("***********: " + tempStr);
-						System.out.println("Configure the wrong parameters in \"parameter.mgc\", please "
+						System.out.println("Configure the wrong parameters in " + inputParameter + ", please "
 								+ "check \"IpPort\", \"User\", \"Password\", \"Downloaddir\", "
 								+ "\"UploadDir\", \"Program\", \"Command\" and comments \"#\" so on,"
 								+ " and add it according manual!");
@@ -145,7 +162,7 @@ public class GridFDockRunner {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.out.println("Exception happen when read the \"parameter.mgc\", please check the parameters!");
+			System.out.println("Exception happen when read the " + inputParameter + ", please check the parameters!");
 		} finally {
 			if (rd != null) {
 				rd.close();
@@ -186,7 +203,6 @@ public class GridFDockRunner {
 		}
 
 		try {
-			// DataDistribute.ftpClient.changeWorkingDirectory(downdir);
 			fileList = dt.ftpClient.listFiles(downdir);
 		} catch (IOException e) {
 			System.out.println("The change working directory is wrong!");
@@ -201,11 +217,13 @@ public class GridFDockRunner {
 		if (program.equalsIgnoreCase("Autodock_Vina")) {
 			for (int i = countStart; i < countEnd; i++) {
 				fltmp = fileList[i].getName();
-				// System.out.println("This is test: " + countStart);
-				//System.out.println("The finish blocks: " + df.format((float) (i + 1) / tmpCount));
-				job.add(new GridFVinaTask(ip, port, user, passwd, downdir, uploaddir, program, command, fltmp, sign));
+				//System.out.println("$$$$$$$$$$$$$$$$$$^^^^^^^^:  " + fltmp);
+				final Task<?> task = job.add(
+						new GridFVinaTask(ip, port, user, passwd, downdir, uploaddir, program, command, fltmp, sign));
+				task.setId(jobName + " - MolGridCal task");
 				System.gc();
 			}
+			dt.logout();
 			dt.disconnect();
 		} else if (program.equalsIgnoreCase("Autodock4")) {
 			for (int i = countStart; i < countEnd; i++) {
@@ -213,27 +231,59 @@ public class GridFDockRunner {
 
 				if (fileList[i].getName().contains("pdbqt")) {
 					fltmp = Arraytmp[0];
-					job.add(new GridFAutodock4Task(ip, port, user, passwd, downdir, uploaddir, program, command, fltmp,
-							sign));
+					final Task<?> task = job.add(new GridFAutodock4Task(ip, port, user, passwd, downdir, uploaddir,
+							program, command, fltmp, sign));
+					task.setId(jobName + " - MolGridCal task");
 					System.gc();
 				}
-				// System.out.println(Arraytmp[0]);
 			}
+			dt.logout();
+			dt.disconnect();
+		} else if (program.equalsIgnoreCase("Ledock")) {
+			System.out.println("MolGridCal only support the linux version of Ledock.");
+			for (int i = countStart; i < countEnd; i++) {
+				fltmp = fileList[i].getName();
+				final Task<?> task = job.add(
+						new GridFLeDockTask(ip, port, user, passwd, downdir, uploaddir, program, command, fltmp, sign));
+				task.setId(jobName + " - MolGridCal task");
+				System.gc();
+			}
+			dt.logout();
+			dt.disconnect();
+		} else if (program.equalsIgnoreCase("UCSFDock")) {
+			System.out.println("MolGridCal only support the linux version of UCSF Dock.");
+			for (int i = countStart; i < countEnd; i++) {
+				fltmp = fileList[i].getName();
+				final Task<?> task = job.add(new GridFUCSFDOCKTask(ip, port, user, passwd, downdir, uploaddir, program,
+						command, fltmp, sign, commandDir));
+				task.setId(jobName + " - MolGridCal task");
+				System.gc();
+			}
+			dt.logout();
+			dt.disconnect();
+		} else if (program.equalsIgnoreCase("Schrodinger")) {
+			for (int i = countStart; i < countEnd; i++) {
+				fltmp = fileList[i].getName();
+				final Task<?> task = job.add(new GridFSchrodingerTask(ip, port, user, passwd, downdir, uploaddir,
+						program, command, fltmp, sign, commandDir));
+				task.setId(jobName + " - MolGridCal task");
+				System.gc();
+			}
+			dt.logout();
 			dt.disconnect();
 		}
 		System.gc();
 		return job;
-
 	}
 
 	// Blocking mode
-	public void executeBlockingJob(final JPPFClient jppfClient) throws Exception {
+	public void executeBlockingTask(final JPPFClient jppfClient) throws Exception {
 		/** This part send the 8000 results to nodes. It is likely m*n **/
 		// Read the parameters from the file.
 		try {
-			fl = new File("parameter.mgc");
+			fl = new File(inputParameter);
 		} catch (Exception e) {
-			System.out.println("The parameter of \"parameter.mgc\" can not be found, please create it!");
+			System.out.println("The parameter of " + inputParameter + " can not be found, please create it!");
 		}
 
 		try {
@@ -265,10 +315,18 @@ public class GridFDockRunner {
 						sign = temArray[1];
 					} else if (temArray[0].equalsIgnoreCase("MaxNodes")) {
 						maxNodes = Integer.parseInt(temArray[1]);
+					} else if (temArray[0].equalsIgnoreCase("commandDir")) {
+						if (tempStr.contains("Program Files")) {
+							commandDir = temArray[1] + " " + temArray[2];
+						} else if (tempStr.contains("Program Files (x86)")) {
+							commandDir = temArray[1] + " " + temArray[2] + " " + temArray[3];
+						} else {
+							commandDir = temArray[1];
+						}
 					} else if (temArray[0].startsWith("#")) {
 					} else {
 						System.out.println("***********: " + tempStr);
-						System.out.println("Configure the wrong parameters in \"parameter.mgc\", please "
+						System.out.println("Configure the wrong parameters in +" + inputParameter + ", please "
 								+ "check \"IpPort\", \"User\", \"Password\", \"Downloaddir\", "
 								+ "\"UploadDir\", \"Program\", \"Command\" and comments \"#\" so on,"
 								+ " and add it according manual!");
@@ -277,7 +335,7 @@ public class GridFDockRunner {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.out.println("Exception happen when read the \"parameter.mgc\", please check the parameters!");
+			System.out.println("Exception happen when read the " + inputParameter + ", please check the parameters!");
 		} finally {
 			if (rd != null) {
 				rd.close();
@@ -327,6 +385,7 @@ public class GridFDockRunner {
 		// System.out.println("*****TEST!");
 		// The defined contStart and countEnd can be recognized by buildJob function.
 		for (int i = 0; i < fileList.length; i = i + maxNodes) {
+			// System.out.println("***********$$$$ "+ fileList.length + maxNodes);
 			countStart = i;
 			countEnd = i + maxNodes;
 			if (countEnd > fileList.length) {
@@ -350,15 +409,16 @@ public class GridFDockRunner {
 			// to the job.
 			List<Task<?>> results = jppfClient.submitJob(job);
 			// process the results
-			processExecutionResults(job.getName(), results);
+			proExeResults(job.getName(), results);
 
 			System.gc();
 		}
 		dt.disconnect();
+		System.gc();
 	}
 
 	// non-blocking mode
-	public void executeNonBlockingJob(final JPPFClient jppfClient) throws Exception {
+	public void executeNonBlockingTask(final JPPFClient jppfClient) throws Exception {
 
 		// create jobs.
 		JPPFJob job = buildJob("Virtual Screening job");
@@ -374,14 +434,14 @@ public class GridFDockRunner {
 		List<Task<?>> results = job.awaitResults();
 
 		// process the results
-		processExecutionResults(job.getName(), results);
+		proExeResults(job.getName(), results);
 	}
 
 	// Build multi-jobs! This is a template from JPPF, need update for MolGridCal.
-	public void executeMultipleConcurrentJobs(final JPPFClient jppfClient, final int numberOfJobs) throws Exception {
+	public void executeMultipleConcurrentTasks(final JPPFClient jppfClient, final int numberOfJobs) throws Exception {
 		// ensure that the client connection pool has as many connections
 		// as the number of jobs to execute
-		ensureNumberOfConnections(jppfClient, numberOfJobs);
+		getNumberOfConnections(jppfClient, numberOfJobs);
 
 		// this list will hold all the jobs submitted for execution,
 		// so we can later collect and process their results
@@ -405,7 +465,6 @@ public class GridFDockRunner {
 		// the non-blocking jobs are submitted asynchronously, we can do anything else
 		// in the meantime
 		System.out.println("Doing something while the jobs are executing ...");
-		// ...
 
 		// wait until the jobs are finished and process their results.
 		for (JPPFJob job : jobList) {
@@ -413,33 +472,27 @@ public class GridFDockRunner {
 			List<Task<?>> results = job.awaitResults();
 
 			// process the job results
-			processExecutionResults(job.getName(), results);
+			proExeResults(job.getName(), results);
 		}
 	}
 
 	// Ensure that the client has the desired number of connections.
-	public void ensureNumberOfConnections(final JPPFClient jppfClient, final int numberOfConnections) throws Exception {
-		JPPFConnectionPool pool = null;
-		// wait until the client has at least one connection pool with at least
-		// one avaialable connection
-		while ((pool = jppfClient.getConnectionPool()) == null) {
-			Thread.sleep(10L);
-		}
+	public void getNumberOfConnections(final JPPFClient jppfClient, final int numberOfConnections) throws Exception {
+		// wait until the client has at least one connection pool with at least one
+		// avaialable connection
+		final JPPFConnectionPool pool = jppfClient.awaitActiveConnectionPool();
 
-		// if the pool doesn't have the expected number of connections, change
-		// its size
+		// if the pool doesn't have the expected number of connections, change its size
 		if (pool.getConnections().size() != numberOfConnections) {
 			// set the pool size to the desired number of connections
-			pool.setMaxSize(numberOfConnections);
+			pool.setSize(numberOfConnections);
 		}
 
 		// wait until all desired connections are available (ACTIVE status)
-		while (pool.getConnections(JPPFClientConnectionStatus.ACTIVE).size() < numberOfConnections) {
-			Thread.sleep(10L);
-		}
+		pool.awaitActiveConnections(Operator.AT_LEAST, numberOfConnections);
 	}
 
-	public synchronized void processExecutionResults(final String jobName, final List<Task<?>> results) {
+	public synchronized void proExeResults(final String jobName, final List<Task<?>> results) {
 		// print a results header
 		System.out.printf("Results for job '%s' :\n", jobName);
 		// process the results
@@ -447,14 +500,15 @@ public class GridFDockRunner {
 			String taskName = task.getId();
 			// if the task execution resulted in an exception
 			if (task.getThrowable() != null) {
-				// System.out.println("***This is a test!");
-				// process the exception here ...
 				System.out.println(taskName + ", an exception was raised: " + task.getThrowable().getMessage());
-			} /*
-				 * else { // process the result here ... //System.out.println(taskName +
-				 * ", execution result: " + task.getResult()); }
-				 */
+			}
 		}
 		System.gc();
+	}
+
+	// Save memory.
+	protected void finalize() throws Throwable {
+		super.finalize();
+		// System.out.println("Memory start cleaning!");
 	}
 }

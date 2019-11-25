@@ -9,4 +9,4 @@ then
   JAVA_PATH="java"
 fi
 
-$JAVA_PATH -cp config:classes:lib/* -Xmx64m -Dlog4j.configuration=log4j.properties -Djppf.config=jppf.properties -Djava.util.logging.config.file=config/logging.properties org.jppf.application.template.TemplateApplicationRunner
+$JAVA_PATH -cp config:classes:lib/* -Xmx64m -Dlog4j.configuration=log4j.properties -Djppf.config=jppf.properties -Djava.util.logging.config.file=config/logging.properties GridFDock.GridFDockRunner

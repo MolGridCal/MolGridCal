@@ -23,8 +23,6 @@ import java.security.NoSuchAlgorithmException;
 import org.jppf.node.protocol.AbstractTask;
 
 public class GridFVinaTask extends AbstractTask<String> {
-
-	// private static FTPClient ftpClient = null;
 	String CODING_1 = "GBK";
 	String CODING_2 = "iso-8859-1";
 	String fltmp;
@@ -40,7 +38,6 @@ public class GridFVinaTask extends AbstractTask<String> {
 
 	public GridFVinaTask(String ip, int port, String user, String passwd, String downdir, String uploaddir,
 			String program, String command, String fltmp, String sign) {
-
 		this.ip = ip;
 		this.port = port;
 		this.user = user;
@@ -51,37 +48,30 @@ public class GridFVinaTask extends AbstractTask<String> {
 		this.fltmp = fltmp;
 		this.program = program;
 		this.sign = sign;
-
 	}
 
 	/************* assign the static parameters to run ****************/
 	public void run() {
-
 		gridFDockTask(ip, port, user, passwd, downdir, uploaddir, program, command, fltmp, sign);
 		System.out.println("*********** Working complete ************");
 		System.gc();
 	}
 
 	/****************** This function can be modify *******************/
-
 	public void gridFDockTask(String ipAdress, int port, String user, String passwd, String downdir, String uploaddir,
 			String program, String command, String fltmp, String sign) {
-
+		// Get the node directory in the local computer.
 		String userdir = System.getProperty("user.dir");
 		String os = System.getProperty("os.name").toLowerCase();
-
-		/*
-		 * if (os.indexOf("windows") >= 0 || os.indexOf("linux") >= 0) {
-		 * deleteFile1(userdir, sign); }
-		 */
 		System.out.println("*************Working started**************");
 		System.out.println("###################################################################" + "\n"
-				+ "# If you used MolGridCal in your work, please cite:               #" + "\n"
-				+ "#                                                                 #" + "\n"
-				+ "# Qifeng Bai, PLoS One. 2014 Sep 17;9(9):e107837.                 #" + "\n"
-				+ "# Download site: https://github.com/MolGridCal/MolGridCal         #" + "\n"
-				+ "# E-mail (molaical@yeah.net)                                    #" + "\n"
-				+ "# Blog website (http://molgridcal.blog.163.com).                  #" + "\n"
+				+ "# This work is performed by Autodock vina for virtual screening.    #" + "\n"
+				+ "# If you used MolGridCal in your work, please cite:                 #" + "\n"
+				+ "#                                                                   #" + "\n"
+				+ "# Qifeng Bai, PLoS One. 2014 Sep 17;9(9):e107837.                   #" + "\n"
+				+ "# Download site: https://github.com/MolGridCal/MolGridCal           #" + "\n"
+				+ "# E-mail (molgridcal@yeah.net)                                      #" + "\n"
+				+ "# Blog website (http://molgridcal.blog.163.com).                    #" + "\n"
 				+ "###################################################################");
 
 		/********************* Download file *********************/
@@ -92,14 +82,14 @@ public class GridFVinaTask extends AbstractTask<String> {
 		boolean tk1 = true;
 		boolean tk2 = true;
 
+		// Make sure download right.
 		while (tocken3) {
-
 			int remoteFile = 0;
 			int localFile = 111111;
 			int i = 0;
 
+			// Make sure no running jobs, then download file.
 			if (GridFDockRunner.cn.check(command) <= 0) {
-
 				try {
 					GridFDockRunner.dt.connect(ipAdress, port, user, passwd);
 					System.out.println("Connect to the server for working!");
@@ -112,20 +102,13 @@ public class GridFVinaTask extends AbstractTask<String> {
 				}
 
 				try {
+					// Try to download file for 20 times correctly.
 					while (tk && i <= 20) {
-
+						// Download file
 						GridFDockRunner.dt.download(downdir + "/" + fltmp, userdir + "/" + fltmp);
-						// System.out.println("##########"+downdir + "/" + fltmp
-						// +userdir + "/" + fltmp);
-
+						// Calculate the files size in Ftp server and local.
 						remoteFile = GridFDockRunner.dt.getFileSize(ipAdress, user, passwd, downdir, fltmp, port);
 						localFile = getLocalFileSize(userdir, fltmp);
-
-						// test
-						// System.out.println("remote: " + remoteFile + " "
-						// +"local: "+localFile);
-						// System.out.println("local: "+localFile);
-
 						System.gc();
 
 						if (localFile != remoteFile) {
@@ -148,6 +131,7 @@ public class GridFVinaTask extends AbstractTask<String> {
 					e4.printStackTrace();
 				}
 				try {
+					// Close connection.
 					GridFDockRunner.dt.logout();
 					GridFDockRunner.dt.disconnect();
 				} catch (IOException e2) {
@@ -164,17 +148,22 @@ public class GridFVinaTask extends AbstractTask<String> {
 				try {
 					Thread.sleep(2000);
 				} catch (InterruptedException e) {
-System.exit(0);				
-//	e.printStackTrace();
+					System.out.println("Some interrupted exception happened, please check it.");
+					System.exit(0);
+					e.printStackTrace();
 				}
 			}
 
 		}
 
-		/******************************
-		 * Start Thread
-		 *********************************/
+		// Judge whether input file exists.
+		File tmpFile = new File("conf.txt");
+		if (!tmpFile.exists()) {
+			System.out.println("The input file does not exist, please place it in the node.");
+		}
 
+		/********************** Start Thread *************************/
+		// Start running molecular docking task.
 		nt = new ExecuteThread(program, command, fltmp);
 		nt.start();
 		nt.setPriority(Thread.MIN_PRIORITY);
@@ -182,12 +171,11 @@ System.exit(0);
 			nt.join();
 		} catch (InterruptedException e2) {
 			// TODO Auto-generated catch block
-			// e2.printStackTrace();
+			e2.printStackTrace();
 			System.out.println("The task was terminated in the client!");
 		}
 		System.gc();
 		/********************************* END **************************************/
-
 		int remoteFile = 0;
 		int localFile = 111111;
 
@@ -196,61 +184,57 @@ System.exit(0);
 
 		int j = 0;
 		int k = 0;
-		/******************************
-		 * Upload file
-		 ********************************/
+		/********************** * Upload file *******************************/
+		// Make sure put the results to FTP server correctly.
 		while (token1) {
-
+			// Start the upload until no pointed program running.
 			if (GridFDockRunner.cn.check(command) == 0) {
-
 				try {
 					GridFDockRunner.dt.connect(ipAdress, port, user, passwd);
 					System.out.println("******** Starting for transferring! ********");
 				} catch (NoSuchAlgorithmException e1) {
+					System.out.println("Connection err in upload part.");
 					e1.printStackTrace();
 				} catch (IOException e1) {
-
+					System.out.println("Connection I/O err in upload part.");
 					e1.printStackTrace();
 				}
 
 				try {
-
+					// Try to upload 10 times.
 					while (tk1 && j <= 10) {
-
+						// Upload result.
 						GridFDockRunner.dt.upload(userdir + "/out_" + fltmp, uploaddir + "/" + "out_" + fltmp);
-
+						// Calculate the result's files size in Ftp server and local.
 						remoteFile = GridFDockRunner.dt.getFileSize(ipAdress, user, passwd, uploaddir, "out_" + fltmp,
 								port);
 
 						localFile = getLocalFileSize(userdir, "out_" + fltmp);
 						System.gc();
 						if (remoteFile > localFile) {
-							// System.out.println("###########: " + remoteFile);
-							// System.out.println("///%%%%%%%%%%%: " +
-							// localFile);
 							System.out.println("Remote File is bigger, delete it!");
-
 							j++;
-
 							// sleep 10 fs
 							try {
 								Thread.sleep(10);
 							} catch (InterruptedException e) {
+								System.out.println("Sleep interrupted when upload result file.");
 								e.printStackTrace();
 							}
 							System.gc();
+							// Delete the file in ftp server.
 							GridFDockRunner.dt.deleteFtpServerFile(uploaddir + "/" + "out_" + fltmp);
-
 						} else if (remoteFile < localFile) {
 							System.out.print("Remote File is smaller, it should continue upload!");
-							
 							// sleep 10 fs
 							try {
 								Thread.sleep(10);
 							} catch (InterruptedException e) {
+								System.out.println("Sleep interrupted when upload file.");
 								e.printStackTrace();
 							}
 							System.gc();
+							// Delete the file in ftp server.
 							GridFDockRunner.dt.deleteFtpServerFile(uploaddir + "/" + "out_" + fltmp);
 						} else {
 							tk1 = false;
@@ -264,44 +248,39 @@ System.exit(0);
 				}
 
 				try {
-
+					// Try to upload 10 times.
 					while (tk2 && k <= 10) {
-
+						// Upload log result.
 						GridFDockRunner.dt.upload(userdir + "/log_" + fltmp, uploaddir + "/" + "log_" + fltmp);
-
+						// Calculate the result's files size in Ftp server and local.
 						remoteFile1 = GridFDockRunner.dt.getFileSize(ipAdress, user, passwd, uploaddir, "log_" + fltmp,
 								port);
-
 						localFile1 = getLocalFileSize(userdir, "log_" + fltmp);
-
 						System.gc();
 						if (remoteFile1 > localFile1) {
-							// System.out.println("###########: " + localFile1);
-							// System.out.println("###########: " +
-							// remoteFile1);
 							System.out.println("Remote File is bigger, delete it!");
 							k++;
-							
 							// sleep 10 fs
 							try {
 								Thread.sleep(10);
 							} catch (InterruptedException e) {
+								System.out.println("Sleep interrupted when upload log file.");
 								e.printStackTrace();
 							}
 							System.gc();
-
+							// Delete the file in ftp server.
 							GridFDockRunner.dt.deleteFtpServerFile(uploaddir + "/" + "log_" + fltmp);
-
 						} else if (remoteFile1 < localFile1) {
 							System.out.print("Remote File is smaller, it should continue upload!");
-							
 							// sleep 10 fs
 							try {
 								Thread.sleep(10);
 							} catch (InterruptedException e) {
+								System.out.println("Sleep interrupted when upload log file.");
 								e.printStackTrace();
 							}
 							System.gc();
+							// Delete the file in ftp server.
 							GridFDockRunner.dt.deleteFtpServerFile(uploaddir + "/" + "log_" + fltmp);
 						} else {
 							tk2 = false;
@@ -324,38 +303,42 @@ System.exit(0);
 				try {
 					Thread.sleep(20);
 				} catch (InterruptedException e) {
+					System.out.println("Sleep interrupted exception when prepared to delete ligand.");
 					e.printStackTrace();
 				}
 
+				// Start to delete download ligand to save node disk space.
 				try {
 					deleteFile(userdir, fltmp);
 				} catch (Exception e) {
 					e.printStackTrace();
 					System.out.println("Delete ligand err!");
 				}
+				// Start delete docking results to save node disk space.
 				try {
 					deleteFile(userdir, "out_" + fltmp);
 				} catch (Exception e) {
 					e.printStackTrace();
 					System.out.println("Delete output file err!");
 				}
+				// Start delete log file to save node disk space.
 				try {
 					deleteFile(userdir, "log_" + fltmp);
 				} catch (Exception e) {
 					e.printStackTrace();
 					System.out.println("Delete output file err!");
 				}
-
 				token1 = false;
 			} else {
 				try {
 					Thread.sleep(2000);
 				} catch (InterruptedException e) {
-
+					System.out.println("Sleep interrupted exception when delete final results.");
 					e.printStackTrace();
 				}
 			}
 		}
+		nt = null;
 		System.gc();
 	}
 
@@ -376,7 +359,6 @@ System.exit(0);
 	}
 
 	private void deleteFile1(String path, String filename) {
-
 		File file = new File(path);
 		File[] files = file.listFiles();
 
@@ -402,9 +384,8 @@ System.exit(0);
 			size = fis.available();
 
 		} catch (FileNotFoundException e) {
-
 			System.out.println("The local file which downloads from FTP is not found.");
-
+			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -417,7 +398,11 @@ System.exit(0);
 			}
 		}
 		return size;
-
 	}
 
+	// Save memory.
+	protected void finalize() throws Throwable {
+		super.finalize();
+		// System.out.println("Memory start cleaning!");
+	}
 }

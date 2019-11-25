@@ -52,8 +52,6 @@ public class DataDistribute {
 
 	public void connect(String hostname, int port, String username, String password)
 			throws IOException, NoSuchAlgorithmException {
-		// ftpClient = new FTPSClient(false);
-		// create with implicit TLS
 		boolean tmp = true;
 		int i = 0;
 		ftpClient = new FTPClient();
@@ -87,7 +85,6 @@ public class DataDistribute {
 		ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 		ftpClient.enterLocalPassiveMode();
 		// Set the binary for transferring
-		// ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 		Status result = null;
 		boolean tmp1 = true;
 		// Check the file
@@ -125,11 +122,6 @@ public class DataDistribute {
 					long nowProcess = localSize / step;
 					if (nowProcess > process) {
 						process = nowProcess;
-						/*
-						 * if (process % 10 == 0) System.out.println(
-						 * "Download Progressing" + process);
-						 */
-
 					}
 				}
 				in.close();
@@ -159,10 +151,6 @@ public class DataDistribute {
 					long nowProcess = localSize / step;
 					if (nowProcess > process) {
 						process = nowProcess;
-						/*
-						 * if (process % 10 == 0) System.out.println(
-						 * "Download Progressing" + process);
-						 */
 					}
 				}
 				in.close();
@@ -182,12 +170,11 @@ public class DataDistribute {
 			}
 		}
 		return result;
-
 	}
 
 	// Upload File
 	public Status upload(String local, String remote) throws IOException {
-
+		// using passive mode.
 		ftpClient.enterLocalPassiveMode();
 
 		ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
@@ -223,13 +210,6 @@ public class DataDistribute {
 					localSize = f.length();
 
 					result = uploadFile(remoteFileName, f, ftpClient, remoteSize);
-
-					// System.out.println("**********************************
-					// localSize: "+
-					// localSize);
-					// System.out.println("**********************************
-					// remoteSize: "+
-					// remoteSize);
 					if (result == Status.Upload_From_Break_Failed) {
 						if (!ftpClient.deleteFile(remoteFileName)) {
 							return Status.Delete_Remote_Faild;
@@ -294,8 +274,8 @@ public class DataDistribute {
 				}
 
 				start = end + 1;
-				end = directory.indexOf("/", start);// "/" is a token for making
-				// fold.
+				// "/" is a token for making fold.
+				end = directory.indexOf("/", start);
 
 				if (end <= start) {
 					break;
@@ -333,8 +313,6 @@ public class DataDistribute {
 				localreadbytes += c;
 				if (localreadbytes / step != process) {
 					process = localreadbytes / step;
-					// System.out.println("Upload Progress" + process);
-
 				}
 			}
 			out.flush();
@@ -398,9 +376,8 @@ public class DataDistribute {
 		int t = 0;
 
 		BufferedInputStream bis;
-
 		try {
-
+			// Get rul from ftp server.
 			url = new URL("ftp://" + user + ":" + pswd + "@" + server + ":" + port + path + "/" + filename);
 
 			url.getFile().length();
@@ -412,8 +389,6 @@ public class DataDistribute {
 				out.write((byte) c);
 			urlfs.close();
 			t = out.size();
-			// return loadmap (new ByteArrayInputStream(out.toByteArray());
-
 		} catch (MalformedURLException e) {
 			System.out.println("When get the size of file from site, the url is wrong.");
 		} catch (IOException e) {
@@ -434,21 +409,8 @@ public class DataDistribute {
 			}
 			ftpClient.enterLocalPassiveMode();
 			ftpFile = ftpClient.listFiles(path + "/" + filename);
-			// FTPFile ftpFile = ftpClient.mlistFile(path+ "/" + filename);
 			if (ftpFile != null) {
-				// String name = ftpFile[0].getName();
-				// System.out.println("test: " + ftpFile.getSize());
 				size = (int) ftpFile[0].getSize();
-				// String timestamp =
-				// ftpFile.getTimestamp().getTime().toString();
-				// String type = ftpFile.isDirectory() ? "Directory" : "File";
-				// System.out.println("Name: " + name);
-				// System.out.println("Size: " + size);
-				// System.out.println("Type: " + type);
-				// System.out.println("Timestamp: " + timestamp);
-				// close ftpclient
-				// ftpClient.logout();
-				// ftpClient.disconnect();
 			} else {
 				System.out.println("The pointed file or directory may not exist!");
 			}
@@ -475,5 +437,11 @@ public class DataDistribute {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	// Save memory.
+	protected void finalize() throws Throwable {
+		super.finalize();
+		// System.out.println("Memory start cleaning!");
 	}
 }

@@ -1,0 +1,14 @@
+Ipaddress           219.246.34.43
+IpPort              2121
+User                gridfvs
+Password            gridfvs709
+Downloaddir         /VS5/ligands
+UploadDir           /VS5/result
+MaxNodes            10000
+
+# The line show program run as below
+Token               ZINC
+Program             Schrodinger
+Command             glide
+# It is for dock6 find the correct path.
+commandDir          C:/Program Files/Schrodinger2017-1

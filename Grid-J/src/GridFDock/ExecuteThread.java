@@ -18,7 +18,6 @@
 
 package GridFDock;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
@@ -51,40 +50,55 @@ public class ExecuteThread extends Thread {
 			String userdir = System.getProperty("user.dir");
 			String os = System.getProperty("os.name").toLowerCase();
 
-			/************************* This part can be modified ********************************/
+			/*************************
+			 * This part can be modified
+			 ********************************/
 			if (program.equalsIgnoreCase("Autodock_Vina")) {
 				if (os.indexOf("windows") >= 0) {
-					command = userdir + "\\" + execute + ".exe" + " --config"
-							+ " conf.txt" + " --ligand " + name + " --out "
-							+ "out_" + name + " --log " + "log_" + name;
+					command = userdir + "\\" + execute + ".exe" + " --config" + " conf.txt" + " --ligand " + name
+							+ " --out " + "out_" + name + " --log " + "log_" + name;
 
 				} else if (os.indexOf("linux") >= 0) {
-					command = userdir + "/" + execute + " --config"
-							+ " conf.txt" + " --ligand " + name + " --out "
+					command = userdir + "/" + execute + " --config" + " conf.txt" + " --ligand " + name + " --out "
 							+ "out_" + name + " --log " + "log_" + name;
 				}
 
 			} else if (program.equalsIgnoreCase("Autodock4")) {
 
 				if (os.indexOf("windows") >= 0) {
-					command = userdir + "\\" + execute + ".exe" + " -p " + name
-							+ ".dpf" + " -l " + name + ".dlg";
+					command = userdir + "\\" + execute + ".exe" + " -p " + name + ".dpf" + " -l " + name + ".dlg";
 				} else if (os.indexOf("linux") >= 0) {
-					command = userdir + "/" + execute + " -p " + name + ".dpf"
-							+ " -l " + name + ".dlg";
+					command = userdir + "/" + execute + " -p " + name + ".dpf" + " -l " + name + ".dlg";
 				}
 
+			} else if (program.equalsIgnoreCase("Ledock")) {
+				if (os.indexOf("windows") >= 0) {
+					System.out.println("Not support in windows system.");
+					System.exit(0);
+				} else if (os.indexOf("linux") >= 0) {
+					command = userdir + "/" + execute + " " + "dock.in";
+				}
+			} else if (program.equalsIgnoreCase("UCSFDock")) {
+				if (os.indexOf("windows") >= 0) {
+					System.out.println("Not support in windows system.");
+					System.exit(0);
+				} else if (os.indexOf("linux") >= 0) {
+					command = execute + " -i " + "UCSFDock.in";
+				}
+			} else if (program.equalsIgnoreCase("Schrodinger")) {
+				if (os.indexOf("windows") >= 0) {
+					command = execute;
+				} else if (os.indexOf("linux") >= 0) {
+					command = execute;
+				}
 			} else {
 				System.out.println("Please input the correct program's name!");
 			}
-			/********************************* END **********************************************/
-
-			// System.out.println(command);
+			/************************* END ********************************/
 
 			System.out.println("Now the " + program + " running********");
-
+			// System.out.println("^^^^^^^^: " + command);
 			pr = rn.exec(command);
-
 
 			InputStreamReader ir = new InputStreamReader(pr.getInputStream());
 			LineNumberReader Inr = new LineNumberReader(ir);
@@ -97,25 +111,27 @@ public class ExecuteThread extends Thread {
 			pr.destroy();
 			Inr.close();
 			ir.close();
-			
+
 		} catch (Exception e) {
+			System.out.println("Some execption happen, please check ExecuteThread class.");
 			e.printStackTrace();
 		} finally {
 			if (ir != null) {
 				try {
 					ir.close();
 				} catch (IOException e) {
-
+					System.out.println("I/O execption happen, please check ExecuteThread class.");
 					e.printStackTrace();
 				}
 			}
-			
+
 			if (pr != null) {
 				try {
 					pr.getOutputStream().close();
 					pr.getInputStream().close();
 					pr.getErrorStream().close();
 				} catch (IOException e) {
+					System.out.println("I/O execption happen, please check ExecuteThread class.");
 					e.printStackTrace();
 				}
 
@@ -123,5 +139,11 @@ public class ExecuteThread extends Thread {
 			}
 		}
 
+	}
+
+	// Save memory.
+	protected void finalize() throws Throwable {
+		super.finalize();
+		// System.out.println("Memory start cleaning!");
 	}
 }

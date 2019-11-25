@@ -1,0 +1,12 @@
+Ipaddress           219.246.34.43
+IpPort              2121
+User                gridfvs
+Password            gridfvs709
+Downloaddir         /VS3/ligands
+UploadDir           /VS3/result
+MaxNodes            10000
+
+# The line show program run as below
+Token               ZINC
+Program             Ledock
+Command             ledock_linux_x86

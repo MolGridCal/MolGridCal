@@ -1,0 +1,14 @@
+Ipaddress           219.246.34.43
+IpPort              2121
+User                gridfvs
+Password            gridfvs709
+Downloaddir         /VS4/ligands
+UploadDir           /VS4/result
+MaxNodes            10000
+
+# The line show program run as below
+Token               ZINC
+Program             UCSFDock
+Command             dock6
+# It is for dock6 find the correct path.
+commandDir          /home/feng/soft/dock6

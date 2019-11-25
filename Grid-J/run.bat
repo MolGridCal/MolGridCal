@@ -7,7 +7,7 @@ set JAVA_PATH=java
 :: try and parse from the config file
 call:getvalue %CONFIG_FILE% "jppf.java.path" JAVA_PATH
 
-call %JAVA_PATH% -cp config;classes;lib/* -Xmx64m -Dlog4j.configuration=log4j.properties -Djppf.config=jppf.properties -Djava.util.logging.config.file=config/logging.properties org.jppf.application.template.TemplateApplicationRunner
+call %JAVA_PATH% -cp config;classes;lib/* -Xmx64m -Dlog4j.configuration=log4j.properties -Djppf.config=jppf.properties -Djava.util.logging.config.file=config/logging.properties GridFDock.GridFDockRunner
 goto:eof
 
 :getvalue

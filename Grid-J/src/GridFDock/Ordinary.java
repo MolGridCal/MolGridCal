@@ -21,7 +21,6 @@ package GridFDock;
 import java.io.*;
 
 public class Ordinary {
-
 	/* This method can be used to judge whether the program is running. */
 	public int check(String keyWord) {
 		Runtime runtime = Runtime.getRuntime();
@@ -30,109 +29,105 @@ public class Ordinary {
 		String str = "";
 		BufferedReader in = null;
 		keyWord.toLowerCase();
-		
+
 		try {
-
+			// Get the current running path of node.
 			String os = System.getProperty("os.name").toLowerCase();
-
+			// Get command information in different operation system.
 			if (os.indexOf("windows") >= 0) {
 				process = runtime.exec("Tasklist");
 				try {
-				in = new BufferedReader(new InputStreamReader(
-						process.getInputStream()));
-
-				while ((str = in.readLine()) != null) {
-
-					String[] name = str.split("\\s+");
-					for (int i = 0; i < name.length; i++) {
-						if (name[i].toLowerCase().startsWith(keyWord)) {
-							a = a+1;
-						} 
+					in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+					while ((str = in.readLine()) != null) {
+						String[] name = str.split("\\s+");
+						for (int i = 0; i < name.length; i++) {
+							if (name[i].toLowerCase().startsWith(keyWord)) {
+								a = a + 1;
+							}
+						}
 					}
-				}
-				in.close();
-				process.waitFor();
-				process.destroy();
-			}catch(Exception e){
-				System.exit(0);
-			}finally {
-				if (in!= null) {
-					try {
-						in.close();
-					} catch (IOException e) {
-
-						e.printStackTrace();
-					}
-				}
-				
-				if (process != null) {
-					try {
-						process.getOutputStream().close();
-						process.getInputStream().close();
-						process.getErrorStream().close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-
+					in.close();
+					process.waitFor();
 					process.destroy();
-				}
-			}
-			
-			} else if (os.indexOf("linux") >= 0) {
-
-				process = runtime.exec("ps -a");
-				try {
-				in = new BufferedReader(new InputStreamReader(
-						process.getInputStream()));
-
-				while ((str = in.readLine()) != null) {
-	
-					String[] name = str.split("\\s+");
-					for (int i = 0; i < name.length; i++) {
-						if (name[i].toLowerCase().startsWith(keyWord)) {
-							a = a + 1;
-						} 
-					}
-				}
-				
-				in.close();
-				process.waitFor();
-				process.destroy();
-				}catch (Exception e) {
+				} catch (Exception e) {
+					System.out.println("The run command is err.");
 					e.printStackTrace();
-				}finally {
-					if (in!= null) {
+				} finally {
+					if (in != null) {
 						try {
 							in.close();
 						} catch (IOException e) {
-
+							System.out.println("I/O exception, please check Ordinary class.");
 							e.printStackTrace();
 						}
 					}
-					
+					// clear process for saving memory.
 					if (process != null) {
 						try {
 							process.getOutputStream().close();
 							process.getInputStream().close();
 							process.getErrorStream().close();
 						} catch (IOException e) {
+							System.out.println("I/O exception, please check Ordinary class.");
 							e.printStackTrace();
 						}
-
 						process.destroy();
 					}
 				}
 
+			} else if (os.indexOf("linux") >= 0) {
+				process = runtime.exec("ps -a");
+				try {
+					in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+					while ((str = in.readLine()) != null) {
+						String[] name = str.split("\\s+");
+						for (int i = 0; i < name.length; i++) {
+							if (name[i].toLowerCase().startsWith(keyWord)) {
+								a = a + 1;
+							}
+						}
+					}
+					in.close();
+					process.waitFor();
+					process.destroy();
+				} catch (Exception e) {
+					System.out.println("Maybe waitFor of process is err, please check Ordinary class.");
+					e.printStackTrace();
+				} finally {
+					if (in != null) {
+						try {
+							in.close();
+						} catch (IOException e) {
+							System.out.println("I/O exception, please check Ordinary class.");
+							e.printStackTrace();
+						}
+					}
+					// clear process for saving memory.
+					if (process != null) {
+						try {
+							process.getOutputStream().close();
+							process.getInputStream().close();
+							process.getErrorStream().close();
+						} catch (IOException e) {
+							System.out.println("I/O exception, please check Ordinary class.");
+							e.printStackTrace();
+						}
+						process.destroy();
+					}
+				}
 			} else {
-				System.out
-						.println("The other system is not support now, we need more fund support.");
+				System.out.println("The other system is not support now, we need more fund support.");
 			}
-
 		} catch (IOException e) {
 			e.printStackTrace();
-			System.out
-					.println("Some thing seemly wrong when check the process.");
+			System.out.println("Some thing seemly wrong when check the process.");
 		}
 		return a;
+	}
+
+	// Save memory.
+	protected void finalize() throws Throwable {
+		super.finalize();
+		// System.out.println("Memory start cleaning!");
 	}
 }
